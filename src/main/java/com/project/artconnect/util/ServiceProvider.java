@@ -1,26 +1,25 @@
 package com.project.artconnect.util;
 
-import com.project.artconnect.service.*;
-import com.project.artconnect.service.impl.*;
+import com.project.artconnect.service.ArtistService;
+import com.project.artconnect.service.ArtworkService;
+import com.project.artconnect.service.CommunityService;
+import com.project.artconnect.service.GalleryService;
+import com.project.artconnect.service.WorkshopService;
+import com.project.artconnect.service.impl.JdbcArtistService;
+import com.project.artconnect.service.impl.JdbcArtworkService;
+import com.project.artconnect.service.impl.JdbcCommunityService;
+import com.project.artconnect.service.impl.JdbcGalleryService;
+import com.project.artconnect.service.impl.JdbcWorkshopService;
 
-/**
- * Service Provider to manage singleton instances of services and handle their
- * initialization.
- */
+// Fournisseur de services — utilise les implémentations JDBC
 public class ServiceProvider {
-    private static final InMemoryArtistService artistService = new InMemoryArtistService();
-    private static final InMemoryArtworkService artworkService = new InMemoryArtworkService();
-    private static final InMemoryGalleryService galleryService = new InMemoryGalleryService();
-    private static final InMemoryWorkshopService workshopService = new InMemoryWorkshopService();
-    private static final InMemoryCommunityService communityService = new InMemoryCommunityService();
 
-    static {
-        // Initialize services with their dependencies
-        artworkService.initData(artistService);
-        galleryService.initData(artworkService);
-        workshopService.initData(artistService);
-        communityService.initData(artworkService);
-    }
+    // Initialisation des services avec les DAOs JDBC
+    private static final ArtistService    artistService    = new JdbcArtistService();
+    private static final ArtworkService   artworkService   = new JdbcArtworkService();
+    private static final GalleryService   galleryService   = new JdbcGalleryService();
+    private static final WorkshopService  workshopService  = new JdbcWorkshopService();
+    private static final CommunityService communityService = new JdbcCommunityService();
 
     public static ArtistService getArtistService() {
         return artistService;
