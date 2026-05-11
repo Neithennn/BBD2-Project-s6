@@ -19,8 +19,19 @@ public class JdbcGalleryService implements GalleryService {
 
     @Override
     public List<Gallery> getAllGalleries() {
-        // Délégation directe au DAO
-        return galleryDao.findAll();
+        List<Gallery> galleries = galleryDao.findAll();
+        List<Exhibition> allExhibitions = exhibitionDao.findAll();
+
+        for (Gallery g : galleries) {
+            for (Exhibition e : allExhibitions) {
+                if (e.getGallery() != null && e.getGallery().getName().equals(g.getName())) {
+                    e.setGallery(g);
+                    g.getExhibitions().add(e);
+                }
+            }
+        }
+
+        return galleries;
     }
 
     @Override

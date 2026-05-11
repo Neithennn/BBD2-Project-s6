@@ -32,7 +32,10 @@ CREATE TABLE IF NOT EXISTS artists (
     website       VARCHAR(200),
     social_media  VARCHAR(200),
     is_active     TINYINT(1)   NOT NULL DEFAULT 1,
-    PRIMARY KEY (id)
+    PRIMARY KEY (id),
+    UNIQUE KEY uq_artist_name (name),
+    UNIQUE KEY uq_artist_email (contact_email),
+    CONSTRAINT chk_artist_birth_year CHECK (birth_year IS NULL OR birth_year BETWEEN 1000 AND 2100)
 );
 
 -- ============================================================
@@ -73,6 +76,9 @@ CREATE TABLE IF NOT EXISTS artworks (
     status        ENUM('FOR_SALE', 'SOLD', 'EXHIBITED') NOT NULL DEFAULT 'FOR_SALE',
     artist_id     INT             NOT NULL,
     PRIMARY KEY (id),
+    UNIQUE KEY uq_artwork_title (title),
+    CONSTRAINT chk_artwork_creation_year CHECK (creation_year IS NULL OR creation_year BETWEEN 1000 AND 2100),
+    CONSTRAINT chk_artwork_price CHECK (price >= 0),
     FOREIGN KEY (artist_id) REFERENCES artists(id) ON DELETE CASCADE
 );
 
@@ -99,7 +105,9 @@ CREATE TABLE IF NOT EXISTS galleries (
     contact_phone VARCHAR(50),
     rating        DECIMAL(3, 2)  NOT NULL DEFAULT 0.00,
     website       VARCHAR(200),
-    PRIMARY KEY (id)
+    PRIMARY KEY (id),
+    UNIQUE KEY uq_gallery_name (name),
+    CONSTRAINT chk_gallery_rating CHECK (rating BETWEEN 0 AND 5)
 );
 
 -- ============================================================
@@ -116,6 +124,8 @@ CREATE TABLE IF NOT EXISTS exhibitions (
     curator_name VARCHAR(150),
     theme        VARCHAR(150),
     PRIMARY KEY (id),
+    UNIQUE KEY uq_exhibition_title (title),
+    CONSTRAINT chk_exhibition_dates CHECK (end_date > start_date),
     FOREIGN KEY (gallery_id) REFERENCES galleries(id) ON DELETE CASCADE
 );
 
@@ -146,6 +156,10 @@ CREATE TABLE IF NOT EXISTS workshops (
     description      TEXT,
     level            VARCHAR(50),
     PRIMARY KEY (id),
+    UNIQUE KEY uq_workshop_title (title),
+    CONSTRAINT chk_workshop_duration CHECK (duration_minutes > 0),
+    CONSTRAINT chk_workshop_capacity CHECK (max_participants > 0),
+    CONSTRAINT chk_workshop_price CHECK (price >= 0),
     FOREIGN KEY (instructor_id) REFERENCES artists(id) ON DELETE CASCADE
 );
 
@@ -161,7 +175,8 @@ CREATE TABLE IF NOT EXISTS community_members (
     city            VARCHAR(100),
     membership_type VARCHAR(50)  NOT NULL DEFAULT 'free',
     PRIMARY KEY (id),
-    UNIQUE KEY uq_member_email (email)
+    UNIQUE KEY uq_member_email (email),
+    CONSTRAINT chk_membership_type CHECK (membership_type IN ('free', 'premium'))
 );
 
 -- ============================================================
@@ -185,6 +200,8 @@ CREATE TABLE IF NOT EXISTS bookings (
     booking_date   DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     payment_status VARCHAR(50)  NOT NULL DEFAULT 'PENDING',
     PRIMARY KEY (id),
+    UNIQUE KEY uq_booking_member_workshop (workshop_id, member_id),
+    CONSTRAINT chk_booking_payment_status CHECK (payment_status IN ('PENDING', 'PAID', 'CANCELLED')),
     FOREIGN KEY (workshop_id) REFERENCES workshops(id)         ON DELETE CASCADE,
     FOREIGN KEY (member_id)   REFERENCES community_members(id) ON DELETE CASCADE
 );

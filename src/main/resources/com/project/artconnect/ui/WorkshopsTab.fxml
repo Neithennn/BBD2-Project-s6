@@ -8,13 +8,21 @@
     <padding>
         <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
     </padding>
+    <HBox spacing="10.0" alignment="CENTER_LEFT">
+        <Label text="Book selected workshop for" />
+        <ComboBox fx:id="memberInput" promptText="Community member" prefWidth="240.0" />
+        <Button text="Book" onAction="#handleBookWorkshop" />
+    </HBox>
     <TableView fx:id="workshopTable" VBox.vgrow="ALWAYS">
         <columns>
-            <TableColumn fx:id="titleColumn" text="Title" prefWidth="200" />
+            <TableColumn fx:id="titleColumn" text="Title" prefWidth="190" />
             <TableColumn fx:id="instructorColumn" text="Instructor" prefWidth="150" />
             <TableColumn fx:id="dateColumn" text="Date" prefWidth="150" />
+            <TableColumn fx:id="durationColumn" text="Duration" prefWidth="80" />
+            <TableColumn fx:id="capacityColumn" text="Capacity" prefWidth="80" />
             <TableColumn fx:id="priceColumn" text="Price" prefWidth="80" />
             <TableColumn fx:id="levelColumn" text="Level" prefWidth="100" />
+            <TableColumn fx:id="locationColumn" text="Location" prefWidth="190" />
         </columns>
     </TableView>
 </VBox>

@@ -12,13 +12,53 @@ USE ArtConnect;
 -- ============================================================
 
 -- Index sur artist_id dans artworks (recherche par artiste)
-CREATE INDEX idx_artworks_artist_id ON artworks(artist_id);
+DROP PROCEDURE IF EXISTS sp_create_index_if_absent;
+
+DELIMITER $$
+
+CREATE PROCEDURE sp_create_index_if_absent(
+    IN p_table_name VARCHAR(64),
+    IN p_index_name VARCHAR(64),
+    IN p_create_sql TEXT
+)
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1
+        FROM information_schema.statistics
+        WHERE table_schema = DATABASE()
+          AND table_name = p_table_name
+          AND index_name = p_index_name
+    ) THEN
+        SET @create_index_sql = p_create_sql;
+        PREPARE stmt_create_index FROM @create_index_sql;
+        EXECUTE stmt_create_index;
+        DEALLOCATE PREPARE stmt_create_index;
+    END IF;
+END$$
+
+DELIMITER ;
+
+CALL sp_create_index_if_absent(
+    'artworks',
+    'idx_artworks_artist_id',
+    'CREATE INDEX idx_artworks_artist_id ON artworks(artist_id)'
+);
 
 -- Index sur member_id dans bookings (réservations d'un membre)
-CREATE INDEX idx_bookings_member_id ON bookings(member_id);
+CALL sp_create_index_if_absent(
+    'bookings',
+    'idx_bookings_member_id',
+    'CREATE INDEX idx_bookings_member_id ON bookings(member_id)'
+);
 
 -- Index sur city dans artists (recherche par ville)
-CREATE INDEX idx_artists_city ON artists(city);
+CALL sp_create_index_if_absent(
+    'artists',
+    'idx_artists_city',
+    'CREATE INDEX idx_artists_city ON artists(city)'
+);
+
+DROP PROCEDURE IF EXISTS sp_create_index_if_absent;
 
 
 -- ============================================================
@@ -78,19 +118,31 @@ CREATE OR REPLACE VIEW v_reservations_membres AS
 -- ============================================================
 
 -- Suppression des triggers existants (pour ré-exécution du script)
+DROP TRIGGER IF EXISTS trg_verif_dates_exposition_insert;
+DROP TRIGGER IF EXISTS trg_verif_dates_exposition_update;
 DROP TRIGGER IF EXISTS trg_verif_dates_exposition;
 DROP TRIGGER IF EXISTS trg_verif_capacite_workshop;
 DROP TRIGGER IF EXISTS trg_audit_statut_oeuvre;
 
 DELIMITER $$
 
--- Trigger 1 : vérifier que la date de fin est après la date de début
--- S'exécute BEFORE INSERT et BEFORE UPDATE sur exhibitions
-CREATE TRIGGER trg_verif_dates_exposition
+-- Trigger 1a : vérifier que la date de fin est après la date de début (INSERT)
+CREATE TRIGGER trg_verif_dates_exposition_insert
 BEFORE INSERT ON exhibitions
 FOR EACH ROW
 BEGIN
     -- Si la date de fin est avant ou égale à la date de début, on bloque
+    IF NEW.end_date <= NEW.start_date THEN
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'Erreur : la date de fin doit être après la date de début.';
+    END IF;
+END$$
+
+-- Trigger 1b : meme verification sur UPDATE (pour ne pas pouvoir contourner la regle)
+CREATE TRIGGER trg_verif_dates_exposition_update
+BEFORE UPDATE ON exhibitions
+FOR EACH ROW
+BEGIN
     IF NEW.end_date <= NEW.start_date THEN
         SIGNAL SQLSTATE '45000'
             SET MESSAGE_TEXT = 'Erreur : la date de fin doit être après la date de début.';
@@ -109,7 +161,8 @@ BEGIN
     -- Compter les réservations existantes pour cet atelier
     SELECT COUNT(*) INTO nb_places_prises
     FROM bookings
-    WHERE workshop_id = NEW.workshop_id;
+    WHERE workshop_id = NEW.workshop_id
+      AND payment_status <> 'CANCELLED';
 
     -- Récupérer la capacité maximale de l'atelier
     SELECT max_participants INTO capacite_max

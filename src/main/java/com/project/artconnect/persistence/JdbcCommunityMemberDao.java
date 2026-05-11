@@ -19,6 +19,7 @@ public class JdbcCommunityMemberDao implements CommunityMemberDao {
     // Construit un objet CommunityMember à partir d'une ligne du ResultSet
     private CommunityMember lireMembre(ResultSet rs) throws SQLException {
         CommunityMember membre = new CommunityMember();
+        membre.setId(rs.getInt("id"));
         membre.setName(rs.getString("name"));
         membre.setEmail(rs.getString("email"));
         membre.setBirthYear(rs.getObject("birth_year") != null ? rs.getInt("birth_year") : null);
@@ -36,7 +37,7 @@ public class JdbcCommunityMemberDao implements CommunityMemberDao {
         ResultSet rs = null;
 
         try {
-            String sql = "SELECT d.name FROM disciplines d "
+            String sql = "SELECT d.id, d.name FROM disciplines d "
                        + "JOIN member_disciplines md ON d.id = md.discipline_id "
                        + "WHERE md.member_id = ?";
             stmt = conn.prepareStatement(sql);
@@ -44,7 +45,7 @@ public class JdbcCommunityMemberDao implements CommunityMemberDao {
             rs = stmt.executeQuery();
 
             while (rs.next()) {
-                disciplines.add(new Discipline(rs.getString("name")));
+                disciplines.add(new Discipline(rs.getInt("id"), rs.getString("name")));
             }
 
         } finally {

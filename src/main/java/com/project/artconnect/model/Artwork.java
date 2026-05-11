@@ -7,6 +7,8 @@ import java.util.List;
  * Artwork entity representing a piece created by an artist.
  */
 public class Artwork {
+    // Identifiant technique (rempli par le DAO apres lecture/insertion BD)
+    private Integer id;
     private String title;
     private Integer creationYear;
     private String type; // painting, sculpture, etc.
@@ -35,6 +37,14 @@ public class Artwork {
     }
 
     // Getters and Setters
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
+    }
+
     public String getTitle() {
         return title;
     }

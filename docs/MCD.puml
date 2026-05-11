@@ -1,0 +1,159 @@
+@startuml MCD_ArtConnect
+' ============================================================
+' MCD - Modele Conceptuel de Donnees (Merise)
+' Projet ArtConnect - BBD2 T1603
+'
+' Pour rendre le diagramme :
+'   - En ligne : copier-coller sur https://www.plantuml.com/plantuml/
+'   - Local    : java -jar plantuml.jar docs/MCD.puml
+' ============================================================
+
+!theme plain
+skinparam backgroundColor #FFFFFF
+skinparam classBorderColor #2C3E50
+skinparam classBackgroundColor #ECF0F1
+skinparam arrowColor #34495E
+skinparam classFontName "Segoe UI"
+skinparam classFontSize 12
+skinparam nodesep 60
+skinparam ranksep 80
+hide empty members
+
+title MCD ArtConnect - Modele Conceptuel (Merise)
+
+' -------- ENTITES --------
+entity "ARTIST" as Artist {
+  # id_artist : INT
+  --
+  * name : VARCHAR
+    bio : TEXT
+    birth_year : INT
+    contact_email : VARCHAR
+    phone : VARCHAR
+    city : VARCHAR
+    website : VARCHAR
+    social_media : VARCHAR
+  * is_active : BOOLEAN
+}
+
+entity "DISCIPLINE" as Discipline {
+  # id_discipline : INT
+  --
+  * name : VARCHAR
+}
+
+entity "ARTWORK" as Artwork {
+  # id_artwork : INT
+  --
+  * title : VARCHAR
+    creation_year : INT
+    type : VARCHAR
+    medium : VARCHAR
+    dimensions : VARCHAR
+    description : TEXT
+  * price : DECIMAL
+  * status : ENUM(FOR_SALE,SOLD,EXHIBITED)
+}
+
+entity "ARTWORK_TAG" as Tag {
+  # id_tag : INT
+  --
+  * name : VARCHAR
+}
+
+entity "GALLERY" as Gallery {
+  # id_gallery : INT
+  --
+  * name : VARCHAR
+    address : VARCHAR
+    owner_name : VARCHAR
+    opening_hours : VARCHAR
+    contact_phone : VARCHAR
+  * rating : DECIMAL
+    website : VARCHAR
+}
+
+entity "EXHIBITION" as Exhibition {
+  # id_exhibition : INT
+  --
+  * title : VARCHAR
+  * start_date : DATE
+  * end_date : DATE
+    description : TEXT
+    curator_name : VARCHAR
+    theme : VARCHAR
+}
+
+entity "WORKSHOP" as Workshop {
+  # id_workshop : INT
+  --
+  * title : VARCHAR
+  * date : DATETIME
+  * duration_minutes : INT
+  * max_participants : INT
+  * price : DECIMAL
+    location : VARCHAR
+    description : TEXT
+    level : VARCHAR
+}
+
+entity "COMMUNITY_MEMBER" as Member {
+  # id_member : INT
+  --
+  * name : VARCHAR
+  * email : VARCHAR <<UNIQUE>>
+    birth_year : INT
+    phone : VARCHAR
+    city : VARCHAR
+  * membership_type : VARCHAR
+}
+
+entity "BOOKING" as Booking {
+  # id_booking : INT
+  --
+  * booking_date : DATETIME
+  * payment_status : VARCHAR
+}
+
+entity "REVIEW" as Review {
+  # id_review : INT
+  --
+  * rating : INT (1..5)
+    comment : TEXT
+  * review_date : DATE
+}
+
+entity "AUDIT_ARTWORK" as Audit {
+  # id_audit : INT
+  --
+    ancien_statut : VARCHAR
+    nouveau_statut : VARCHAR
+  * date_changement : DATETIME
+}
+
+' -------- ASSOCIATIONS (losanges Merise) --------
+' 1:N -- on n'utilise pas de losange explicite, on garde les cardinalites
+Artist        ||--o{ Artwork      : "cree (1,N)"
+Gallery       ||--o{ Exhibition   : "accueille (1,N)"
+Artist        ||--o{ Workshop     : "anime (1,N)"
+Workshop      ||--o{ Booking      : "recoit (1,N)"
+Member        ||--o{ Booking      : "effectue (1,N)"
+Member        ||--o{ Review       : "redige (1,N)"
+Artwork       ||--o{ Review       : "est evaluee par (1,N)"
+Artwork       ||--o{ Audit        : "historise (0,N)"
+
+' N:N -- tables de jonction explicites Merise
+Artist        }o--o{ Discipline   : "pratique (N,N)"
+Artwork       }o--o{ Tag          : "est etiquetee (N,N)"
+Exhibition    }o--o{ Artwork      : "presente (N,N)"
+Member        }o--o{ Discipline   : "prefere (N,N)"
+
+legend bottom right
+  <b>Cardinalites</b>
+  ||  = 1,1   |o  = 0,1
+  o{  = 0,N   |{  = 1,N
+  <b>Legende clefs</b>
+  # = cle primaire      * = obligatoire (NOT NULL)
+endlegend
+
+@enduml

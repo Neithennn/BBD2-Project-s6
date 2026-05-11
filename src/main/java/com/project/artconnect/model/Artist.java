@@ -7,6 +7,8 @@ import java.util.List;
  * Artist entity representing a creator in the community.
  */
 public class Artist {
+    // Identifiant technique (rempli par le DAO apres lecture/insertion BD)
+    private Integer id;
     private String name;
     private String bio;
     private Integer birthYear;
@@ -32,6 +34,14 @@ public class Artist {
     }
 
     // Getters and Setters
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
+    }
+
     public String getName() {
         return name;
     }

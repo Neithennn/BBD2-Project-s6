@@ -65,12 +65,12 @@ public class JdbcArtistService implements ArtistService {
         try {
             // Connexion à la base
             conn = ConnectionManager.getConnection();
-            stmt = conn.prepareStatement("SELECT name FROM disciplines ORDER BY name");
+            stmt = conn.prepareStatement("SELECT id, name FROM disciplines ORDER BY name");
             rs = stmt.executeQuery();
 
             // Parcours des résultats
             while (rs.next()) {
-                disciplines.add(new Discipline(rs.getString("name")));
+                disciplines.add(new Discipline(rs.getInt("id"), rs.getString("name")));
             }
 
         } catch (SQLException e) {

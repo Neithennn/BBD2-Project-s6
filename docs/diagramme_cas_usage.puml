@@ -1,0 +1,111 @@
+@startuml CasUsage_ArtConnect
+' ============================================================
+' Diagramme de cas d'usage UML
+' Projet ArtConnect - BBD2 T1603
+' Deux roles : Organisateur et Visiteur
+' ============================================================
+
+!theme plain
+skinparam backgroundColor #FFFFFF
+skinparam actor {
+  BackgroundColor #EAF2FB
+  BorderColor #1F3A93
+}
+skinparam usecase {
+  BackgroundColor #FDF6E3
+  BorderColor #7F5F00
+}
+skinparam packageStyle rectangle
+left to right direction
+
+title Cas d'usage - ArtConnect
+
+actor "Organisateur" as Org
+actor "Visiteur\n(membre de la communaute)" as Vis
+
+rectangle "ArtConnect" {
+
+  package "Artistes & Oeuvres" {
+    usecase "Creer / modifier / supprimer\nun artiste"       as UC_MgrArtist
+    usecase "Associer un artiste\na des disciplines"         as UC_LinkDisc
+    usecase "Creer / modifier / supprimer\nune oeuvre"       as UC_MgrArtwork
+    usecase "Associer des tags\na une oeuvre"                as UC_LinkTags
+    usecase "Rechercher un artiste\n(nom, ville, discipline)" as UC_Search
+    usecase "Consulter les artistes\net leurs oeuvres"       as UC_Browse
+  }
+
+  package "Galeries & Expositions" {
+    usecase "Gerer une galerie"               as UC_MgrGallery
+    usecase "Creer / modifier / supprimer\nune exposition" as UC_MgrExpo
+    usecase "Ajouter une oeuvre\na une exposition"   as UC_AddArtworkExpo
+    usecase "Consulter les expositions"       as UC_ViewExpo
+  }
+
+  package "Ateliers" {
+    usecase "Creer / modifier / supprimer\nun atelier"    as UC_MgrWorkshop
+    usecase "Consulter les ateliers"                      as UC_ViewWorkshops
+    usecase "S'inscrire a un atelier"                     as UC_Register
+    usecase "Annuler une inscription"                     as UC_CancelReg
+  }
+
+  package "Communaute" {
+    usecase "Gerer les membres"               as UC_MgrMembers
+    usecase "Deposer un avis\nsur une oeuvre" as UC_Review
+    usecase "Consulter les avis"              as UC_ViewReviews
+  }
+
+  package "Administration" {
+    usecase "Consulter l'audit des oeuvres" as UC_Audit
+    usecase "Consulter les statistiques\nd'un artiste" as UC_Stats
+  }
+}
+
+' --- Droits de l'organisateur ---
+Org --> UC_MgrArtist
+Org --> UC_LinkDisc
+Org --> UC_MgrArtwork
+Org --> UC_LinkTags
+Org --> UC_Search
+Org --> UC_Browse
+Org --> UC_MgrGallery
+Org --> UC_MgrExpo
+Org --> UC_AddArtworkExpo
+Org --> UC_ViewExpo
+Org --> UC_MgrWorkshop
+Org --> UC_ViewWorkshops
+Org --> UC_MgrMembers
+Org --> UC_ViewReviews
+Org --> UC_Audit
+Org --> UC_Stats
+Org --> UC_CancelReg
+
+' --- Droits du visiteur ---
+Vis --> UC_Search
+Vis --> UC_Browse
+Vis --> UC_ViewExpo
+Vis --> UC_ViewWorkshops
+Vis --> UC_Register
+Vis --> UC_CancelReg
+Vis --> UC_Review
+Vis --> UC_ViewReviews
+
+' --- Relations include / extend ---
+UC_Register   .> UC_ViewWorkshops : <<include>>
+UC_Review     .> UC_Browse        : <<include>>
+UC_AddArtworkExpo .> UC_MgrExpo   : <<extend>>
+UC_LinkTags       .> UC_MgrArtwork : <<extend>>
+UC_LinkDisc       .> UC_MgrArtist  : <<extend>>
+
+note right of UC_Register
+  Declenche :
+   - la procedure sp_inscrire_membre
+   - le trigger trg_verif_capacite_workshop
+end note
+
+note right of UC_MgrExpo
+  Controle automatique
+  des dates par les triggers
+  trg_verif_dates_exposition_insert/update
+end note
+
+@enduml

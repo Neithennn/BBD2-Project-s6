@@ -1,0 +1,180 @@
+@startuml MLD_ArtConnect
+' ============================================================
+' MLD - Modele Logique de Donnees (relationnel)
+' Projet ArtConnect - BBD2 T1603
+' ============================================================
+
+!theme plain
+skinparam backgroundColor #FFFFFF
+skinparam classBorderColor #1F3A93
+skinparam classBackgroundColor #EAF2FB
+skinparam arrowColor #1F3A93
+skinparam classFontName "Segoe UI"
+skinparam classFontSize 11
+skinparam nodesep 45
+skinparam ranksep 65
+hide empty members
+
+title MLD ArtConnect - Schema relationnel
+
+' ---------- TABLES DE REFERENCE ----------
+entity "disciplines" as disciplines {
+  * <b>id</b> : INT <<PK>>
+  --
+  * name : VARCHAR(100) <<UNIQUE>>
+}
+
+entity "artwork_tags" as tags {
+  * <b>id</b> : INT <<PK>>
+  --
+  * name : VARCHAR(80) <<UNIQUE>>
+}
+
+' ---------- TABLES PRINCIPALES ----------
+entity "artists" as artists {
+  * <b>id</b> : INT <<PK>>
+  --
+  * name : VARCHAR(150)
+    bio : TEXT
+    birth_year : INT
+    contact_email : VARCHAR(200)
+    phone : VARCHAR(50)
+    city : VARCHAR(100)
+    website : VARCHAR(200)
+    social_media : VARCHAR(200)
+  * is_active : TINYINT(1)
+}
+
+entity "artworks" as artworks {
+  * <b>id</b> : INT <<PK>>
+  --
+  * title : VARCHAR(200)
+    creation_year : INT
+    type : VARCHAR(100)
+    medium : VARCHAR(100)
+    dimensions : VARCHAR(100)
+    description : TEXT
+  * price : DECIMAL(10,2)
+  * status : ENUM
+  * <color:#C0392B>artist_id</color> : INT <<FK artists.id>>
+}
+
+entity "galleries" as galleries {
+  * <b>id</b> : INT <<PK>>
+  --
+  * name : VARCHAR(150)
+    address : VARCHAR(300)
+    owner_name : VARCHAR(150)
+    opening_hours : VARCHAR(200)
+    contact_phone : VARCHAR(50)
+  * rating : DECIMAL(3,2)
+    website : VARCHAR(200)
+}
+
+entity "exhibitions" as exhibitions {
+  * <b>id</b> : INT <<PK>>
+  --
+  * title : VARCHAR(200)
+  * start_date : DATE
+  * end_date : DATE
+    description : TEXT
+    curator_name : VARCHAR(150)
+    theme : VARCHAR(150)
+  * <color:#C0392B>gallery_id</color> : INT <<FK galleries.id>>
+}
+
+entity "workshops" as workshops {
+  * <b>id</b> : INT <<PK>>
+  --
+  * title : VARCHAR(200)
+  * date : DATETIME
+  * duration_minutes : INT
+  * max_participants : INT
+  * price : DECIMAL(10,2)
+    location : VARCHAR(200)
+    description : TEXT
+    level : VARCHAR(50)
+  * <color:#C0392B>instructor_id</color> : INT <<FK artists.id>>
+}
+
+entity "community_members" as members {
+  * <b>id</b> : INT <<PK>>
+  --
+  * name : VARCHAR(150)
+  * email : VARCHAR(200) <<UNIQUE>>
+    birth_year : INT
+    phone : VARCHAR(50)
+    city : VARCHAR(100)
+  * membership_type : VARCHAR(50)
+}
+
+entity "bookings" as bookings {
+  * <b>id</b> : INT <<PK>>
+  --
+  * booking_date : DATETIME
+  * payment_status : VARCHAR(50)
+  * <color:#C0392B>workshop_id</color> : INT <<FK workshops.id>>
+  * <color:#C0392B>member_id</color> : INT <<FK members.id>>
+}
+
+entity "reviews" as reviews {
+  * <b>id</b> : INT <<PK>>
+  --
+  * rating : INT (1..5)
+    comment : TEXT
+  * review_date : DATE
+  * <color:#C0392B>reviewer_id</color> : INT <<FK members.id>>
+  * <color:#C0392B>artwork_id</color> : INT <<FK artworks.id>>
+  UNIQUE(reviewer_id, artwork_id)
+}
+
+entity "audit_artworks" as audit {
+  * <b>id</b> : INT <<PK>>
+  --
+  * <color:#C0392B>artwork_id</color> : INT
+    ancien_statut : VARCHAR(50)
+    nouveau_statut : VARCHAR(50)
+  * date_changement : DATETIME
+}
+
+' ---------- TABLES DE JONCTION ----------
+entity "artist_disciplines" as ad {
+  * <b>artist_id</b> : INT <<PK,FK>>
+  * <b>discipline_id</b> : INT <<PK,FK>>
+}
+
+entity "artwork_artwork_tags" as at {
+  * <b>artwork_id</b> : INT <<PK,FK>>
+  * <b>tag_id</b> : INT <<PK,FK>>
+}
+
+entity "exhibition_artworks" as ea {
+  * <b>exhibition_id</b> : INT <<PK,FK>>
+  * <b>artwork_id</b> : INT <<PK,FK>>
+}
+
+entity "member_disciplines" as md {
+  * <b>member_id</b> : INT <<PK,FK>>
+  * <b>discipline_id</b> : INT <<PK,FK>>
+}
+
+' ---------- RELATIONS ----------
+artists     ||--o{ artworks      : "1,1 - 0,N"
+artists     ||--o{ workshops     : "1,1 - 0,N"
+galleries   ||--o{ exhibitions   : "1,1 - 0,N"
+workshops   ||--o{ bookings      : "1,1 - 0,N"
+members     ||--o{ bookings      : "1,1 - 0,N"
+members     ||--o{ reviews       : "1,1 - 0,N"
+artworks    ||--o{ reviews       : "1,1 - 0,N"
+artworks    ||--o{ audit         : "1,1 - 0,N"
+
+artists     ||--o{ ad
+disciplines ||--o{ ad
+artworks    ||--o{ at
+tags        ||--o{ at
+exhibitions ||--o{ ea
+artworks    ||--o{ ea
+members     ||--o{ md
+disciplines ||--o{ md
+
+@enduml

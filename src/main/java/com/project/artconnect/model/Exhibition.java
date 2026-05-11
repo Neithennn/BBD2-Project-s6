@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Exhibition {
+    // Identifiant technique (rempli par le DAO apres lecture/insertion BD)
+    private Integer id;
     private String title;
     private LocalDate startDate;
     private LocalDate endDate;
@@ -22,6 +24,14 @@ public class Exhibition {
         this.startDate = startDate;
         this.endDate = endDate;
         this.gallery = gallery;
+    }
+
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
     }
 
     public String getTitle() {

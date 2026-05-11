@@ -1,0 +1,244 @@
+@startuml DiagrammeClasses_ArtConnect
+' ============================================================
+' Diagramme de classes UML
+' Projet ArtConnect - BBD2 T1603
+' Architecture : UI -> Service -> DAO -> Model
+' ============================================================
+
+!theme plain
+skinparam backgroundColor #FFFFFF
+skinparam classBorderColor #2C3E50
+skinparam classBackgroundColor #F8F9FA
+skinparam classFontName "Segoe UI"
+skinparam classFontSize 11
+skinparam arrowColor #34495E
+skinparam packageStyle rectangle
+skinparam nodesep 35
+skinparam ranksep 60
+hide empty members
+
+title Diagramme de classes - ArtConnect
+
+package "model" <<Folder>> {
+
+  class Artist {
+    - id : Integer
+    - name : String
+    - bio : String
+    - birthYear : Integer
+    - contactEmail : String
+    - phone : String
+    - city : String
+    - website : String
+    - socialMedia : String
+    - isActive : boolean
+    - disciplines : List<Discipline>
+    - artworks : List<Artwork>
+    + getters() / setters()
+    + addArtwork(a : Artwork)
+  }
+
+  class Artwork {
+    - id : Integer
+    - title : String
+    - creationYear : Integer
+    - type : String
+    - medium : String
+    - dimensions : String
+    - description : String
+    - price : double
+    - status : Status
+    - tags : List<ArtworkTag>
+    - artist : Artist
+    + getters() / setters()
+  }
+
+  enum Status {
+    FOR_SALE
+    SOLD
+    EXHIBITED
+  }
+
+  class Discipline {
+    - id : Integer
+    - name : String
+  }
+
+  class ArtworkTag {
+    - id : Integer
+    - name : String
+  }
+
+  class Gallery {
+    - id : Integer
+    - name : String
+    - address : String
+    - ownerName : String
+    - openingHours : String
+    - contactPhone : String
+    - rating : double
+    - website : String
+    - exhibitions : List<Exhibition>
+  }
+
+  class Exhibition {
+    - id : Integer
+    - title : String
+    - startDate : LocalDate
+    - endDate : LocalDate
+    - description : String
+    - curatorName : String
+    - theme : String
+    - gallery : Gallery
+    - artworks : List<Artwork>
+  }
+
+  class Workshop {
+    - id : Integer
+    - title : String
+    - date : LocalDateTime
+    - durationMinutes : int
+    - maxParticipants : int
+    - price : double
+    - location : String
+    - description : String
+    - level : String
+    - instructor : Artist
+  }
+
+  class CommunityMember {
+    - id : Integer
+    - name : String
+    - email : String
+    - birthYear : Integer
+    - phone : String
+    - city : String
+    - membershipType : String
+    - favoriteDisciplines : List<Discipline>
+  }
+
+  class Booking {
+    - id : Integer
+    - bookingDate : LocalDateTime
+    - paymentStatus : String
+    - workshop : Workshop
+    - member : CommunityMember
+  }
+
+  class Review {
+    - id : Integer
+    - rating : int
+    - comment : String
+    - reviewDate : LocalDate
+    - reviewer : CommunityMember
+    - artwork : Artwork
+  }
+}
+
+' Associations model
+Artist "1" o-- "0..*" Artwork       : cree >
+Artist "0..*" -- "0..*" Discipline  : pratique >
+Artwork "0..*" -- "0..*" ArtworkTag : etiquete >
+Gallery "1" o-- "0..*" Exhibition   : accueille >
+Exhibition "0..*" -- "0..*" Artwork : presente >
+Artist "1" o-- "0..*" Workshop      : anime >
+Workshop "1" o-- "0..*" Booking     : recoit >
+CommunityMember "1" o-- "0..*" Booking : effectue >
+CommunityMember "1" o-- "0..*" Review  : redige >
+Artwork "1" o-- "0..*" Review       : evaluee par >
+CommunityMember "0..*" -- "0..*" Discipline : prefere >
+Artwork ..> Status
+
+package "service" <<Folder>> {
+  interface ArtistService {
+    + getAllArtists() : List<Artist>
+    + getArtistByName(name : String) : Optional<Artist>
+    + createArtist(a : Artist)
+    + updateArtist(a : Artist)
+    + deleteArtist(name : String)
+  }
+  interface ArtworkService
+  interface GalleryService
+  interface ExhibitionService
+  interface WorkshopService
+  interface CommunityService
+}
+
+package "service.impl" <<Folder>> {
+  class JdbcArtistService
+  class JdbcArtworkService
+  class JdbcGalleryService
+  class JdbcExhibitionService
+  class JdbcWorkshopService
+  class JdbcCommunityService
+}
+
+ArtistService <|.. JdbcArtistService
+ArtworkService <|.. JdbcArtworkService
+GalleryService <|.. JdbcGalleryService
+ExhibitionService <|.. JdbcExhibitionService
+WorkshopService <|.. JdbcWorkshopService
+CommunityService <|.. JdbcCommunityService
+
+package "persistence (DAO JDBC)" <<Folder>> {
+  class JdbcArtistDao {
+    + findAll() : List<Artist>
+    + findByName(name : String) : Optional<Artist>
+    + findByCity(city : String) : List<Artist>
+    + save(a : Artist)
+    + update(a : Artist)
+    + delete(name : String)
+  }
+  class JdbcArtworkDao
+  class JdbcGalleryDao
+  class JdbcExhibitionDao
+  class JdbcWorkshopDao
+  class JdbcCommunityMemberDao
+}
+
+JdbcArtistService     --> JdbcArtistDao
+JdbcArtworkService    --> JdbcArtworkDao
+JdbcGalleryService    --> JdbcGalleryDao
+JdbcExhibitionService --> JdbcExhibitionDao
+JdbcWorkshopService   --> JdbcWorkshopDao
+JdbcCommunityService  --> JdbcCommunityMemberDao
+
+package "ui (JavaFX)" <<Folder>> {
+  class MainController
+  class ArtistController
+  class ArtworkController
+  class GalleryController
+  class ExhibitionController
+  class WorkshopController
+  class CommunityController
+  class DiscoverController
+}
+
+ArtistController      --> ArtistService
+ArtworkController     --> ArtworkService
+GalleryController     --> GalleryService
+ExhibitionController  --> ExhibitionService
+WorkshopController    --> WorkshopService
+CommunityController   --> CommunityService
+DiscoverController    --> ArtistService
+
+package "util / config" <<Folder>> {
+  class ServiceProvider
+  class DatabaseConfig
+}
+
+ServiceProvider --> ArtistService
+ServiceProvider --> ArtworkService
+ServiceProvider --> GalleryService
+ServiceProvider --> ExhibitionService
+ServiceProvider --> WorkshopService
+ServiceProvider --> CommunityService
+
+JdbcArtistDao ..> DatabaseConfig : getConnection()
+JdbcArtworkDao ..> DatabaseConfig
+JdbcGalleryDao ..> DatabaseConfig
+JdbcExhibitionDao ..> DatabaseConfig
+JdbcWorkshopDao ..> DatabaseConfig
+JdbcCommunityMemberDao ..> DatabaseConfig
+
+@enduml

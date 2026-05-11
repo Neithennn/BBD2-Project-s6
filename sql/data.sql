@@ -22,7 +22,6 @@ TRUNCATE TABLE exhibitions;
 TRUNCATE TABLE workshops;
 TRUNCATE TABLE community_members;
 TRUNCATE TABLE galleries;
-TRUNCATE TABLE artist_disciplines;
 TRUNCATE TABLE artists;
 TRUNCATE TABLE disciplines;
 
@@ -117,9 +116,9 @@ INSERT INTO galleries (id, name, address, owner_name, opening_hours, contact_pho
 -- Expositions
 -- ============================================================
 INSERT INTO exhibitions (id, title, start_date, end_date, description, gallery_id, curator_name, theme) VALUES
-    (1, 'Renaissance Revival',    '2025-03-01', '2025-06-30', 'Une plongée dans les chefs-d oeuvre de la Renaissance.',           1, 'Sophie Martin',   'Renaissance'),
-    (2, 'Sculpting the Soul',     '2025-04-15', '2025-08-15', 'Les grandes sculptures de la modernité réunies.',                   2, 'James Brown',     'Sculpture Moderne'),
-    (3, 'Impressionist Dreams',   '2025-05-01', '2025-09-01', 'L impressionnisme français à travers ses plus grandes toiles.',     3, 'Claire Fontaine', 'Impressionnisme');
+    (1, 'Renaissance Revival',    '2026-06-01', '2026-09-30', 'Une plongée dans les chefs-d oeuvre de la Renaissance.',           1, 'Sophie Martin',   'Renaissance'),
+    (2, 'Sculpting the Soul',     '2026-07-15', '2026-11-15', 'Les grandes sculptures de la modernité réunies.',                   2, 'James Brown',     'Sculpture Moderne'),
+    (3, 'Impressionist Dreams',   '2026-08-01', '2026-12-01', 'L impressionnisme français à travers ses plus grandes toiles.',     3, 'Claire Fontaine', 'Impressionnisme');
 
 
 -- ============================================================
@@ -136,9 +135,9 @@ INSERT INTO exhibition_artworks (exhibition_id, artwork_id) VALUES
 -- Ateliers
 -- ============================================================
 INSERT INTO workshops (id, title, date, duration_minutes, max_participants, price, instructor_id, location, description, level) VALUES
-    (1, 'Maîtriser la peinture à l huile', '2025-07-10 10:00:00', 180, 3, 80.00,  2, 'Paris, Atelier Monet',    'Apprendre les bases de la peinture à l huile.',         'Débutant'),
-    (2, 'Paysages impressionnistes',       '2025-07-25 14:00:00', 120, 5, 60.00,  2, 'Giverny, Studio Nature', 'Peindre des paysages avec la technique impressionniste.', 'Intermédiaire'),
-    (3, 'Sculpture en argile',             '2025-08-05 09:00:00', 240, 4, 120.00, 5, 'Paris, Atelier Rodin',    'Introduction à la sculpture sur argile.',                'Débutant');
+    (1, 'Maîtriser la peinture à l huile', '2026-09-10 10:00:00', 180, 3, 80.00,  2, 'Paris, Atelier Monet',    'Apprendre les bases de la peinture à l huile.',         'Débutant'),
+    (2, 'Paysages impressionnistes',       '2026-09-25 14:00:00', 120, 5, 60.00,  2, 'Giverny, Studio Nature', 'Peindre des paysages avec la technique impressionniste.', 'Intermédiaire'),
+    (3, 'Sculpture en argile',             '2026-10-05 09:00:00', 240, 4, 120.00, 5, 'Paris, Atelier Rodin',    'Introduction à la sculpture sur argile.',                'Débutant');
 
 
 -- ============================================================
@@ -168,11 +167,11 @@ INSERT INTO member_disciplines (member_id, discipline_id) VALUES
 -- Réservations d'ateliers
 -- ============================================================
 INSERT INTO bookings (id, workshop_id, member_id, booking_date, payment_status) VALUES
-    (1, 1, 1, '2025-06-01 10:00:00', 'PAID'),     -- Alice s inscrit atelier peinture
-    (2, 1, 2, '2025-06-02 11:00:00', 'PAID'),     -- Bob s inscrit atelier peinture
-    (3, 2, 1, '2025-06-05 09:00:00', 'PENDING'),  -- Alice s inscrit atelier paysages
-    (4, 3, 3, '2025-06-10 14:00:00', 'PAID'),     -- Charlie s inscrit atelier sculpture
-    (5, 3, 4, '2025-06-11 15:00:00', 'PENDING');  -- Diana s inscrit atelier sculpture
+    (1, 1, 1, '2026-05-12 10:00:00', 'PAID'),     -- Alice s inscrit atelier peinture
+    (2, 1, 2, '2026-05-13 11:00:00', 'PAID'),     -- Bob s inscrit atelier peinture
+    (3, 2, 1, '2026-05-14 09:00:00', 'PENDING'),  -- Alice s inscrit atelier paysages
+    (4, 3, 3, '2026-05-15 14:00:00', 'PAID'),     -- Charlie s inscrit atelier sculpture
+    (5, 3, 4, '2026-05-16 15:00:00', 'PENDING');  -- Diana s inscrit atelier sculpture
 
 
 -- ============================================================

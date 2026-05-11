@@ -20,6 +20,7 @@ public class JdbcWorkshopDao implements WorkshopDao {
     // Construit un objet Workshop à partir d'une ligne du ResultSet
     private Workshop lireWorkshop(ResultSet rs) throws SQLException {
         Workshop workshop = new Workshop();
+        workshop.setId(rs.getInt("id"));
         workshop.setTitle(rs.getString("title"));
         workshop.setDurationMinutes(rs.getInt("duration_minutes"));
         workshop.setMaxParticipants(rs.getInt("max_participants"));
@@ -38,6 +39,7 @@ public class JdbcWorkshopDao implements WorkshopDao {
         String nomInstructeur = rs.getString("instructor_name");
         if (nomInstructeur != null) {
             Artist instructeur = new Artist();
+            instructeur.setId(rs.getInt("instructor_id"));
             instructeur.setName(nomInstructeur);
             workshop.setInstructor(instructeur);
         }
@@ -55,9 +57,9 @@ public class JdbcWorkshopDao implements WorkshopDao {
             // Connexion à la base
             conn = ConnectionManager.getConnection();
             // Jointure pour récupérer le nom de l'instructeur
-            String sql = "SELECT w.title, w.date, w.duration_minutes, w.max_participants, "
+            String sql = "SELECT w.id, w.title, w.date, w.duration_minutes, w.max_participants, "
                        + "w.price, w.location, w.description, w.level, "
-                       + "ar.name AS instructor_name "
+                       + "ar.id AS instructor_id, ar.name AS instructor_name "
                        + "FROM workshops w "
                        + "JOIN artists ar ON w.instructor_id = ar.id "
                        + "WHERE w.id = ?";
@@ -99,9 +101,9 @@ public class JdbcWorkshopDao implements WorkshopDao {
             // Connexion à la base
             conn = ConnectionManager.getConnection();
             // Jointure pour récupérer le nom de l'instructeur
-            String sql = "SELECT w.title, w.date, w.duration_minutes, w.max_participants, "
+            String sql = "SELECT w.id, w.title, w.date, w.duration_minutes, w.max_participants, "
                        + "w.price, w.location, w.description, w.level, "
-                       + "ar.name AS instructor_name "
+                       + "ar.id AS instructor_id, ar.name AS instructor_name "
                        + "FROM workshops w "
                        + "JOIN artists ar ON w.instructor_id = ar.id";
             stmt = conn.prepareStatement(sql);

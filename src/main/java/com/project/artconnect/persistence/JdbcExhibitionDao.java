@@ -10,6 +10,7 @@ import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -19,6 +20,8 @@ public class JdbcExhibitionDao implements ExhibitionDao {
     // Construit un objet Exhibition à partir d'une ligne du ResultSet
     private Exhibition lireExhibition(ResultSet rs) throws SQLException {
         Exhibition exhibition = new Exhibition();
+        // On remplit l'id pour pouvoir faire des update/delete fiables
+        exhibition.setId(rs.getInt("id"));
         exhibition.setTitle(rs.getString("title"));
         exhibition.setDescription(rs.getString("description"));
         exhibition.setCuratorName(rs.getString("curator_name"));
@@ -39,6 +42,7 @@ public class JdbcExhibitionDao implements ExhibitionDao {
         String nomGalerie = rs.getString("gallery_name");
         if (nomGalerie != null) {
             Gallery gallery = new Gallery();
+            gallery.setId(rs.getInt("gallery_id"));
             gallery.setName(nomGalerie);
             exhibition.setGallery(gallery);
         }
@@ -83,8 +87,8 @@ public class JdbcExhibitionDao implements ExhibitionDao {
             // Connexion à la base
             conn = ConnectionManager.getConnection();
             // Jointure pour récupérer le nom de la galerie
-            String sql = "SELECT e.title, e.start_date, e.end_date, e.description, "
-                       + "e.curator_name, e.theme, g.name AS gallery_name "
+            String sql = "SELECT e.id, e.title, e.start_date, e.end_date, e.description, "
+                       + "e.curator_name, e.theme, g.id AS gallery_id, g.name AS gallery_name "
                        + "FROM exhibitions e "
                        + "JOIN galleries g ON e.gallery_id = g.id";
             stmt = conn.prepareStatement(sql);
@@ -116,17 +120,20 @@ public class JdbcExhibitionDao implements ExhibitionDao {
     public void save(Exhibition exhibition) {
         Connection conn = null;
         PreparedStatement stmt = null;
+        ResultSet rsGenere = null;
 
         try {
             // Connexion à la base
             conn = ConnectionManager.getConnection();
+            // Debut de la transaction : resolution de la galerie + insertion = atomique
+            conn.setAutoCommit(false);
 
             // Récupération de l'id de la galerie
             int galerieId = trouverIdGalerie(conn, exhibition.getGallery().getName());
 
             String sql = "INSERT INTO exhibitions (title, start_date, end_date, description, "
                        + "gallery_id, curator_name, theme) VALUES (?, ?, ?, ?, ?, ?, ?)";
-            stmt = conn.prepareStatement(sql);
+            stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
 
             stmt.setString(1, exhibition.getTitle());
 
@@ -151,13 +158,31 @@ public class JdbcExhibitionDao implements ExhibitionDao {
             // Exécution de l'insertion
             stmt.executeUpdate();
 
+            // Recuperation de l'id genere
+            rsGenere = stmt.getGeneratedKeys();
+            if (rsGenere.next()) {
+                exhibition.setId(rsGenere.getInt(1));
+            }
+
+            // Validation de la transaction
+            conn.commit();
+
         } catch (SQLException e) {
+            // En cas d'erreur, on annule tout (aussi en cas de trigger trg_verif_dates_exposition)
             System.err.println("Erreur save exposition : " + e.getMessage());
+            if (conn != null) {
+                try { conn.rollback(); } catch (SQLException ex) { /* ignoré */ }
+            }
+            throw new IllegalStateException("Impossible d'enregistrer l'exposition : " + e.getMessage(), e);
         } finally {
+            if (rsGenere != null) {
+                try { rsGenere.close(); } catch (SQLException e) { /* ignoré */ }
+            }
             if (stmt != null) {
                 try { stmt.close(); } catch (SQLException e) { /* ignoré */ }
             }
             if (conn != null) {
+                try { conn.setAutoCommit(true); } catch (SQLException e) { /* ignoré */ }
                 try { conn.close(); } catch (SQLException e) { /* ignoré */ }
             }
         }
@@ -171,32 +196,44 @@ public class JdbcExhibitionDao implements ExhibitionDao {
         try {
             // Connexion à la base
             conn = ConnectionManager.getConnection();
-            String sql = "UPDATE exhibitions SET start_date=?, end_date=?, description=?, "
-                       + "curator_name=?, theme=? WHERE title=?";
+            // On met a jour par id pour pouvoir aussi renommer l'exposition
+            int galerieId = trouverIdGalerie(conn, exhibition.getGallery().getName());
+
+            String sql = "UPDATE exhibitions SET title=?, start_date=?, end_date=?, description=?, "
+                       + "gallery_id=?, curator_name=?, theme=? WHERE id=?";
             stmt = conn.prepareStatement(sql);
 
-            if (exhibition.getStartDate() != null) {
-                stmt.setDate(1, Date.valueOf(exhibition.getStartDate()));
-            } else {
-                stmt.setNull(1, java.sql.Types.DATE);
-            }
+            stmt.setString(1, exhibition.getTitle());
 
-            if (exhibition.getEndDate() != null) {
-                stmt.setDate(2, Date.valueOf(exhibition.getEndDate()));
+            if (exhibition.getStartDate() != null) {
+                stmt.setDate(2, Date.valueOf(exhibition.getStartDate()));
             } else {
                 stmt.setNull(2, java.sql.Types.DATE);
             }
 
-            stmt.setString(3, exhibition.getDescription());
-            stmt.setString(4, exhibition.getCuratorName());
-            stmt.setString(5, exhibition.getTheme());
-            stmt.setString(6, exhibition.getTitle());
+            if (exhibition.getEndDate() != null) {
+                stmt.setDate(3, Date.valueOf(exhibition.getEndDate()));
+            } else {
+                stmt.setNull(3, java.sql.Types.DATE);
+            }
+
+            stmt.setString(4, exhibition.getDescription());
+            stmt.setInt(5, galerieId);
+            stmt.setString(6, exhibition.getCuratorName());
+            stmt.setString(7, exhibition.getTheme());
+
+            // Verification : l'id doit etre present
+            if (exhibition.getId() == null) {
+                throw new SQLException("Impossible de mettre a jour une exposition sans id.");
+            }
+            stmt.setInt(8, exhibition.getId());
 
             // Exécution de la mise à jour
             stmt.executeUpdate();
 
         } catch (SQLException e) {
             System.err.println("Erreur update exposition : " + e.getMessage());
+            throw new IllegalStateException("Impossible de mettre a jour l'exposition : " + e.getMessage(), e);
         } finally {
             if (stmt != null) {
                 try { stmt.close(); } catch (SQLException e) { /* ignoré */ }
@@ -223,6 +260,7 @@ public class JdbcExhibitionDao implements ExhibitionDao {
 
         } catch (SQLException e) {
             System.err.println("Erreur delete exposition : " + e.getMessage());
+            throw new IllegalStateException("Impossible de supprimer l'exposition : " + e.getMessage(), e);
         } finally {
             if (stmt != null) {
                 try { stmt.close(); } catch (SQLException e) { /* ignoré */ }

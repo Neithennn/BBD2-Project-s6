@@ -18,6 +18,7 @@ public class JdbcGalleryDao implements GalleryDao {
     // Construit un objet Gallery à partir d'une ligne du ResultSet
     private Gallery lireGallery(ResultSet rs) throws SQLException {
         Gallery gallery = new Gallery();
+        gallery.setId(rs.getInt("id"));
         gallery.setName(rs.getString("name"));
         gallery.setAddress(rs.getString("address"));
         gallery.setOwnerName(rs.getString("owner_name"));
