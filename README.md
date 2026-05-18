@@ -70,6 +70,42 @@ Expected database objects:
 - 4 triggers
 - 3 stored procedures
 
+## Index Benchmark
+
+The `benchmark/` folder contains two Python scripts that measure the real performance gain of `idx_artists_city` on the `artists` table.
+
+### Requirements
+
+```powershell
+pip install mysql-connector-python
+```
+
+### Usage
+
+**1. Generate test data** (inserts 50,000 fictional artists across 100 French cities):
+
+```powershell
+python benchmark/generate_artists.py
+```
+
+**2. Run the benchmark** (measures average query time over 50 runs with and without the index, flushing the table cache between each run):
+
+```powershell
+python benchmark/benchmark_index.py
+```
+
+### Results (measured on 50,005 rows)
+
+| | Without index | With index |
+|---|---|---|
+| EXPLAIN type | `ALL` (full scan ~44,000 rows) | `ref` (index lookup ~486 rows) |
+| Average time | 36.6 ms | 5.6 ms |
+| **Gain** | — | **6.6x faster (85% reduction)** |
+
+The `EXPLAIN` output confirms that without the index MySQL scans the entire table, while with the index it jumps directly to matching rows.
+
+> Note: benchmark artists are prefixed with `bench_` and are separate from the demo data. Re-running `generate_artists.py` cleans up previous benchmark rows automatically.
+
 ## Implemented Features
 - Lists data from MySQL through JDBC services.
 - CRUD screens for artists, artworks, and exhibitions.
